@@ -1,7 +1,10 @@
 #!/usr/bin/env bash
+# Deploy Wars - Turn-based Bash battle game
+# Description: DevOps vs Developer battle game with logging and CI/CD integration
+
 set -Eeuo pipefail
 
-# Color handling
+# ---------- Color handling ----------
 supports_color() {
   if [[ -t 1 ]] && command -v tput >/dev/null 2>&1; then
     local colors
@@ -16,30 +19,32 @@ else
   RED=''; GREEN=''; YELLOW=''; BLUE=''; NC=''
 fi
 
-# Player setup
+# ---------- Players ----------
 PLAYER1="DevOps"
 PLAYER2="Developer"
 HP1=100
 HP2=100
 
-# Attacks
+# ---------- Attacks ----------
 DEVOPS_ATTACKS=("Deploy Script" "Rollback" "Scale Up" "Monitor Alert" "Infra as Code")
 DEVELOPER_ATTACKS=("Hotfix" "Refactor" "Feature Push" "Code Review" "Unit Test")
 
-# Logging
+# ---------- Logging ----------
 LOG_DIR="logs"
 mkdir -p "$LOG_DIR" || { echo -e "${RED}Failed to create logs directory.${NC}" >&2; exit 1; }
 LOG_FILE="$LOG_DIR/battle_$(date +%Y%m%d_%H%M%S)_$$.log"
 : > "$LOG_FILE" || { echo -e "${RED}Cannot write to log file: $LOG_FILE${NC}" >&2; exit 1; }
 
 log_event() {
+  # Avoid pipelines so pipefail can't abort the script
   local msg="$1"
   local ts
   ts="$(date '+%Y-%m-%d %H:%M:%S')"
-  printf '[%s] %s\n' "$ts" "$msg" | tee -a "$LOG_FILE" >/dev/null
+  printf '[%s] %s\n' "$ts" "$msg" >> "$LOG_FILE" || true
+  printf '[%s] %s\n' "$ts" "$msg"
 }
 
-# Error handling
+# ---------- Error handling ----------
 cleanup() {
   local status=$?
   if (( status != 0 )); then
@@ -49,7 +54,7 @@ cleanup() {
 }
 trap cleanup EXIT
 
-# Random number helper
+# ---------- Random helper ----------
 rand_range() {
   local min=$1 max=$2
   if command -v shuf >/dev/null 2>&1; then
@@ -62,7 +67,7 @@ rand_range() {
   fi
 }
 
-# UI
+# ---------- UI ----------
 print_hp() {
   echo -e "${BLUE}$PLAYER1 HP: $HP1${NC} | ${YELLOW}$PLAYER2 HP: $HP2${NC}"
 }
@@ -91,7 +96,7 @@ choose_side() {
   esac
 }
 
-# Game mechanics
+# ---------- Game mechanics ----------
 player_turn() {
   local attacker=$1
   local defender=$2
@@ -100,15 +105,27 @@ player_turn() {
   local hp_defender_name=$5
   local color=$6
 
-  # Safe nameref
+  # Validate names before nameref (prevents -e kills)
   if ! declare -p "$attack_array_name" >/dev/null 2>&1; then
     log_event "ERROR: Attack array '$attack_array_name' not found."
     echo -e "${RED}Attack array '$attack_array_name' not found. Skipping turn.${NC}"
     return 1
   fi
+  if ! declare -p "$hp_attacker_name" >/dev/null 2>&1 || ! declare -p "$hp_defender_name" >/dev/null 2>&1; then
+    log_event "ERROR: HP variables '$hp_attacker_name' or '$hp_defender_name' not found."
+    echo -e "${RED}HP variable missing. Skipping turn.${NC}"
+    return 1
+  fi
+
   local -n attacks="$attack_array_name"
   local -n hp_attacker="$hp_attacker_name"
   local -n hp_defender="$hp_defender_name"
+
+  # Safety: ensure attacks not empty
+  if (( ${#attacks[@]} == 0 )); then
+    log_event "ERROR: Empty attacks array for '$attack_array_name'."
+    return 1
+  fi
 
   local idx damage attack_name
   idx=$(rand_range 0 $(( ${#attacks[@]} - 1 )))
@@ -121,6 +138,7 @@ player_turn() {
   echo -e "${color}${attacker} uses ${attack_name}! It deals ${damage} damage!${NC}"
   print_hp
   log_event "${attacker} used ${attack_name} for ${damage} damage. ${PLAYER1} HP: ${HP1}, ${PLAYER2} HP: ${HP2}"
+  return 0
 }
 
 main() {
@@ -137,17 +155,18 @@ main() {
   choose_side
   echo -e "${GREEN}Battle Start!${NC}"
   print_hp
-  log_event "Battle started between ${PLAYER1} and ${PLAYER2}. User side: ${USER_SIDE}"
+  log_event "Battle started between ${PLAYER1} and ${PLAYER2}. User side: ${USER_SIDE:-unknown}"
 
   local turn=0
+  # Make loop resilient to single-turn failures
   while (( HP1 > 0 && HP2 > 0 )); do
     if (( turn % 2 == 0 )); then
-      player_turn "$PLAYER1" "$PLAYER2" DEVOPS_ATTACKS HP1 HP2 "$BLUE" || break
+      player_turn "$PLAYER1" "$PLAYER2" DEVOPS_ATTACKS HP1 HP2 "$BLUE" || { log_event "WARN: DevOps turn failed."; break; }
     else
-      player_turn "$PLAYER2" "$PLAYER1" DEVELOPER_ATTACKS HP2 HP1 "$YELLOW" || break
+      player_turn "$PLAYER2" "$PLAYER1" DEVELOPER_ATTACKS HP2 HP1 "$YELLOW" || { log_event "WARN: Developer turn failed."; break; }
     fi
     ((turn++))
-    sleep 0.5
+    sleep 0.5 || true
   done
 
   if (( HP1 <= 0 && HP2 <= 0 )); then

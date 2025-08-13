@@ -23,7 +23,9 @@ jobs:
       - name: Run Deploy Wars (non-interactive)
         env:
           FORCE_COLOR: "1"
-        run: ./deploy_wars.sh --no-prompt
+        run: |
+          set -x
+         ./deploy_wars.sh --no-prompt
 
       - name: Commit and push new logs
         if: always()
