@@ -1,4 +1,5 @@
 name: Deploy Wars Battle Log CI
+uses: actions/upload-artifact@v4
 
 on:
   push:
