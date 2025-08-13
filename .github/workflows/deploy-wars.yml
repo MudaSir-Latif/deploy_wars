@@ -1,0 +1,41 @@
+name: Deploy Wars Battle Log CI
+
+on:
+  push:
+    branches: [ main ]
+
+# Allow the workflow to push logs back to the repo
+permissions:
+  contents: write
+
+jobs:
+  run-battle:
+    # Skip if commit message contains [skip ci] to avoid loops
+    if: "!contains(github.event.head_commit.message, '[skip ci]')"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Make game executable
+        run: chmod +x ./deploy_wars.sh
+
+      - name: Run Deploy Wars (non-interactive)
+        env:
+          FORCE_COLOR: "1"
+        run: ./deploy_wars.sh --no-prompt
+
+      - name: Commit and push new logs
+        if: always()
+        run: |
+          if compgen -G "logs/*.log" > /dev/null; then
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git add logs/*.log
+            git commit -m "Add new Deploy Wars battle log [skip ci]" || echo "No changes to commit"
+            git push
+          else
+            echo "No logs found to commit."
+          fi
