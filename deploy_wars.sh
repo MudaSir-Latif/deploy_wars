@@ -81,7 +81,8 @@ choose_side() {
 
 # Main game loop
 main() {
-    choose_side
+    # choose_side
+    USER_SIDE=$PLAYER1
     echo -e "${GREEN}Battle Start!${NC}"
     print_hp
     log_event "Battle started between $PLAYER1 and $PLAYER2."
