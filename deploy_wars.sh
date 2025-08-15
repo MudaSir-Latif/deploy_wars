@@ -1,3 +1,9 @@
+# Color codes
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+NC='\033[0m' # No Color
 #!/usr/bin/env bash
 
 
@@ -30,7 +36,7 @@ rand() {
 
 # Print HP
 print_hp() {
-    echo "$PLAYER1 HP: $HP1 | $PLAYER2 HP: $HP2"
+    echo -e "${BLUE}$PLAYER1 HP: $HP1${NC} | ${YELLOW}$PLAYER2 HP: $HP2${NC}"
 }
 
 # Player turn
@@ -71,10 +77,10 @@ main() {
         sleep 1
     done
     if (( HP1 <= 0 )); then
-        echo "$PLAYER2 wins!"
+        echo -e "${YELLOW}$PLAYER2 wins!${NC}"
         log_event "$PLAYER2 wins!"
     else
-        echo "$PLAYER1 wins!"
+        echo -e "${BLUE}$PLAYER1 wins!${NC}"
         log_event "$PLAYER1 wins!"
     fi
     echo "Battle log saved to $LOG_FILE"
