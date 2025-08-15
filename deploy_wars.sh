@@ -1,3 +1,30 @@
+LEADERBOARD_FILE="leaderboard.txt"
+
+update_leaderboard() {
+    local winner="$1"
+    if [[ ! -f "$LEADERBOARD_FILE" ]]; then
+        echo "$PLAYER1:0" > "$LEADERBOARD_FILE"
+        echo "$PLAYER2:0" >> "$LEADERBOARD_FILE"
+    fi
+    local p1_score=$(grep "^$PLAYER1:" "$LEADERBOARD_FILE" | cut -d: -f2)
+    local p2_score=$(grep "^$PLAYER2:" "$LEADERBOARD_FILE" | cut -d: -f2)
+    if [[ "$winner" == "$PLAYER1" ]]; then
+        p1_score=$((p1_score+1))
+    else
+        p2_score=$((p2_score+1))
+    fi
+    echo "$PLAYER1:$p1_score" > "$LEADERBOARD_FILE.tmp"
+    echo "$PLAYER2:$p2_score" >> "$LEADERBOARD_FILE.tmp"
+    mv "$LEADERBOARD_FILE.tmp" "$LEADERBOARD_FILE"
+}
+
+print_leaderboard() {
+    echo -e "\n${GREEN}Leaderboard:${NC}"
+    while IFS=: read -r name score; do
+        echo -e "  $name: $score wins"
+    done < "$LEADERBOARD_FILE"
+    echo
+}
 print_banner() {
     echo -e "${GREEN} ____             _                 _       _           "
     echo -e "|  _ \\  ___  ___| |__   ___   ___ | |_ ___| |__   __ _ "
@@ -79,18 +106,23 @@ player_turn() {
     local miss_roll=$(rand 1 10)
     local damage=$(rand 10 25)
     local msg=""
+    local anim=""
     if (( miss_roll == 1 )); then
         damage=0
         msg="${RED}Missed!${NC}"
+        anim="\U0001F6AB" # 🚫
     elif (( crit_roll == 10 )); then
         damage=$((damage * 2))
         msg="${GREEN}Critical Hit!${NC}"
+        anim="\U0001F4A5" # 💥
+    else
+        anim="\U0001F5E1" # 🗡️
     fi
 
     hp_defender=$((hp_defender - damage))
     if (( hp_defender < 0 )); then hp_defender=0; fi
 
-    echo -e "$attacker uses $attack_name! $msg It deals $damage damage!"
+    echo -e "$attacker uses $attack_name! $anim $msg It deals $damage damage!"
     print_hp
     log_event "$attacker used $attack_name for $damage damage. $PLAYER1 HP: $HP1, $PLAYER2 HP: $HP2"
 }
@@ -116,13 +148,18 @@ main() {
         ((turn++))
         sleep 1
     done
+    local winner
     if (( HP1 <= 0 )); then
+        winner="$PLAYER2"
         echo -e "${YELLOW}$PLAYER2 wins!${NC}"
         log_event "$PLAYER2 wins!"
     else
+        winner="$PLAYER1"
         echo -e "${BLUE}$PLAYER1 wins!${NC}"
         log_event "$PLAYER1 wins!"
     fi
+    update_leaderboard "$winner"
+    print_leaderboard
     echo "Battle log saved to $LOG_FILE"
 }
 
