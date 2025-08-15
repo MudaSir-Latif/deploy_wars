@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
 
-# Simple Deploy Wars - Turn-based Bash battle game
 
 # Player setup
 PLAYER1="DevOps"
@@ -11,6 +10,18 @@ HP2=100
 # Attack arrays
 DEVOPS_ATTACKS=("Deploy Script" "Rollback" "Scale Up" "Monitor Alert" "Infra as Code")
 DEVELOPER_ATTACKS=("Hotfix" "Refactor" "Feature Push" "Code Review" "Unit Test")
+
+
+# Logging setup
+LOG_DIR="logs"
+LOG_FILE="$LOG_DIR/battle_$(date +%Y%m%d_%H%M%S)_$$.log"
+mkdir -p "$LOG_DIR"
+touch "$LOG_FILE"
+
+# Log function
+log_event() {
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] $1" | tee -a "$LOG_FILE"
+}
 
 # Random number generator in range
 rand() {
@@ -38,12 +49,17 @@ player_turn() {
 
     echo "$attacker uses $attack_name! It deals $damage damage!"
     print_hp
+    log_event "$attacker used $attack_name for $damage damage. $PLAYER1 HP: $HP1, $PLAYER2 HP: $HP2"
 }
+
+
+
 
 # Main game loop
 main() {
     echo "Battle Start!"
     print_hp
+    log_event "Battle started between $PLAYER1 and $PLAYER2."
     turn=0
     while (( HP1 > 0 && HP2 > 0 )); do
         if (( turn % 2 == 0 )); then
@@ -54,12 +70,14 @@ main() {
         ((turn++))
         sleep 1
     done
-
     if (( HP1 <= 0 )); then
         echo "$PLAYER2 wins!"
+        log_event "$PLAYER2 wins!"
     else
         echo "$PLAYER1 wins!"
+        log_event "$PLAYER1 wins!"
     fi
+    echo "Battle log saved to $LOG_FILE"
 }
 
 main
