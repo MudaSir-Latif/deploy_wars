@@ -136,7 +136,8 @@ show_leaderboard() {
     sort -t: -k2 -nr "$LEADERBOARD_FILE"
     echo -e "${GREEN}=======================${NC}\n"
 }
-# ---------------------------
+# -----------------------
+
 
 main() {
     # Check for argument (non-interactive), else prompt (interactive)
@@ -170,7 +171,7 @@ main() {
 
     # Update and show leaderboard
     update_leaderboard "$winner"
-    
+
     # At the end of your game, after deciding the winner:
     echo "$winner" > winner.txt
 
