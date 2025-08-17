@@ -1,2 +1,0 @@
-# Leaderboard for Deploy Wars
-# Format: Player:Score
