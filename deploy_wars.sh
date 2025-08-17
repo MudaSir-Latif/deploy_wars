@@ -1,4 +1,5 @@
-LEADERBOARD="leaderboard.txt"
+#!/usr/bin/env bash
+
 print_banner() {
     echo -e "${GREEN} ____             _                 _       _           "
     echo -e "|  _ \\  ___  ___| |__   ___   ___ | |_ ___| |__   __ _ "
@@ -19,6 +20,7 @@ health_bar() {
     for ((i=0;i<empty;i++)); do bar+="-"; done
     echo "$bar"
 }
+
 USER_SIDE=""
 
 choose_side() {
@@ -34,12 +36,12 @@ choose_side() {
         USER_SIDE="$PLAYER1"
     fi
 }
+
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
-
 
 PLAYER1="DevOps"
 PLAYER2="Developer"
@@ -49,11 +51,12 @@ HP2=100
 DEVOPS_ATTACKS=("Deploy Script" "Rollback" "Scale Up" "Monitor Alert" "Infra as Code")
 DEVELOPER_ATTACKS=("Hotfix" "Refactor" "Feature Push" "Code Review" "Unit Test")
 
-
 LOG_DIR="logs"
 LOG_FILE="$LOG_DIR/battle_$(date +%Y%m%d_%H%M%S)_$$.log"
 mkdir -p "$LOG_DIR"
 touch "$LOG_FILE"
+
+LEADERBOARD_FILE="leaderboard.txt"
 
 log_event() {
     echo "[$(date '+%Y-%m-%d %H:%M:%S')] $1" | tee -a "$LOG_FILE"
@@ -101,8 +104,38 @@ player_turn() {
     log_event "$attacker used $attack_name for $damage damage. $PLAYER1 HP: $HP1, $PLAYER2 HP: $HP2"
 }
 
+# ---------------------------
+# Leaderboard Functions
+# ---------------------------
+update_leaderboard() {
+    local winner="$1"
 
+    # If leaderboard doesn’t exist, create it
+    if [[ ! -f "$LEADERBOARD_FILE" || ! -s "$LEADERBOARD_FILE" ]]; then
+        echo "$PLAYER1:0" > "$LEADERBOARD_FILE"
+        echo "$PLAYER2:0" >> "$LEADERBOARD_FILE"
+    fi
 
+    # Update scores
+    local p1_score=$(grep "^$PLAYER1:" "$LEADERBOARD_FILE" | cut -d: -f2)
+    local p2_score=$(grep "^$PLAYER2:" "$LEADERBOARD_FILE" | cut -d: -f2)
+
+    if [[ "$winner" == "$PLAYER1" ]]; then
+        ((p1_score++))
+    elif [[ "$winner" == "$PLAYER2" ]]; then
+        ((p2_score++))
+    fi
+
+    echo "$PLAYER1:$p1_score" > "$LEADERBOARD_FILE"
+    echo "$PLAYER2:$p2_score" >> "$LEADERBOARD_FILE"
+}
+
+show_leaderboard() {
+    echo -e "\n${GREEN}===== Leaderboard =====${NC}"
+    sort -t: -k2 -nr "$LEADERBOARD_FILE"
+    echo -e "${GREEN}=======================${NC}\n"
+}
+# ---------------------------
 
 main() {
     # Check for argument (non-interactive), else prompt (interactive)
@@ -132,9 +165,11 @@ main() {
         echo -e "${BLUE}$PLAYER1 wins!${NC}"
         log_event "$PLAYER1 wins!"
     fi
-    update_leaderboard "$winner"
-    print_leaderboard
     echo "Battle log saved to $LOG_FILE"
+
+    # Update and show leaderboard
+    update_leaderboard "$winner"
+    show_leaderboard
 }
 
 main "$1"
