@@ -57,6 +57,8 @@ mkdir -p "$LOG_DIR"
 touch "$LOG_FILE"
 
 LEADERBOARD_FILE="leaderboard.txt"
+touch "$LEADERBOARD_FILE"
+
 
 log_event() {
     echo "[$(date '+%Y-%m-%d %H:%M:%S')] $1" | tee -a "$LOG_FILE"
