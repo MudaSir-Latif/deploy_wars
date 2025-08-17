@@ -2,7 +2,7 @@ LEADERBOARD_FILE="leaderboard.txt"
 
 update_leaderboard() {
     local winner="$1"
-    if [[ ! -f "$LEADERBOARD_FILE" ]]; then
+    if [[ ! -f "$LEADERBOARD_FILE" || ! -s "$LEADERBOARD_FILE" ]]; then
         echo "$PLAYER1:0" > "$LEADERBOARD_FILE"
         echo "$PLAYER2:0" >> "$LEADERBOARD_FILE"
     fi
