@@ -31,15 +31,15 @@ jobs:
             WINNER=$(cat winner.txt)
 
             # Initialize leaderboard if missing
-            if [ ! -f leaderboard.json ]; then
-              echo '{"DevOps":0,"Developer":0}' > leaderboard.json
+            if [ ! -f leaderboard.txt ]; then
+              echo '{"DevOps":0,"Developer":0}' > leaderboard.txt
             fi
 
             # Update counts
             if [ "$WINNER" = "DevOps" ]; then
-              jq '.DevOps += 1' leaderboard.json > tmp.$$.json && mv tmp.$$.json leaderboard.json
+              jq '.DevOps += 1' leaderboard.txt > tmp.$$.json && mv tmp.$$.json leaderboard.txt
             elif [ "$WINNER" = "Developer" ]; then
-              jq '.Developer += 1' leaderboard.json > tmp.$$.json && mv tmp.$$.json leaderboard.json
+              jq '.Developer += 1' leaderboard.txt > tmp.$$.json && mv tmp.$$.json leaderboard.txt
             fi
           fi
 
