@@ -30,17 +30,28 @@ jobs:
           if [ -f winner.txt ]; then
             WINNER=$(cat winner.txt)
 
-            # Initialize leaderboard if missing
+            # Initialize leaderboard.txt if missing
             if [ ! -f leaderboard.txt ]; then
-              echo '{"DevOps":0,"Developer":0}' > leaderboard.txt
+              echo "DevOps:0" > leaderboard.txt
+              echo "Developer:0" >> leaderboard.txt
             fi
 
-            # Update counts
+            # Read scores
+            DEVOPS_SCORE=$(grep "^DevOps:" leaderboard.txt | cut -d: -f2)
+            DEVELOPER_SCORE=$(grep "^Developer:" leaderboard.txt | cut -d: -f2)
+
+            # Update winner’s score
             if [ "$WINNER" = "DevOps" ]; then
-              jq '.DevOps += 1' leaderboard.txt > tmp.$$.json && mv tmp.$$.json leaderboard.txt
+              DEVOPS_SCORE=$((DEVOPS_SCORE+1))
             elif [ "$WINNER" = "Developer" ]; then
-              jq '.Developer += 1' leaderboard.txt > tmp.$$.json && mv tmp.$$.json leaderboard.txt
+              DEVELOPER_SCORE=$((DEVELOPER_SCORE+1))
             fi
+
+            # Rewrite leaderboard.txt
+            {
+              echo "DevOps:$DEVOPS_SCORE"
+              echo "Developer:$DEVELOPER_SCORE"
+            } > leaderboard.txt
           fi
 
       - name: Commit and push logs + leaderboard
@@ -48,6 +59,6 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add logs/*.log leaderboard.json || true
+          git add logs/*.log leaderboard.txt || true
           git commit -m "Update Deploy Wars logs & leaderboard [skip ci]" || echo "No changes to commit"
           git push
