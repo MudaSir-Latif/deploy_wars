@@ -1,34 +1,4 @@
-LEADERBOARD_FILE="leaderboard.txt"
-
-update_leaderboard() {
-    local winner="$1"
-    if [[ ! -f "$LEADERBOARD_FILE" || ! -s "$LEADERBOARD_FILE" ]]; then
-        echo "$PLAYER1:0" > "$LEADERBOARD_FILE"
-        echo "$PLAYER2:0" >> "$LEADERBOARD_FILE"
-    fi
-    local p1_score=$(grep "^$PLAYER1:" "$LEADERBOARD_FILE" | grep -v '^#' | cut -d: -f2)
-    local p2_score=$(grep "^$PLAYER2:" "$LEADERBOARD_FILE" | grep -v '^#' | cut -d: -f2)
-    p1_score=${p1_score:-0}
-    p2_score=${p2_score:-0}
-    if [[ "$winner" == "$PLAYER1" ]]; then
-        p1_score=$((p1_score+1))
-    else
-        p2_score=$((p2_score+1))
-    fi
-    echo "$PLAYER1:$p1_score" > "$LEADERBOARD_FILE.tmp"
-    echo "$PLAYER2:$p2_score" >> "$LEADERBOARD_FILE.tmp"
-    mv "$LEADERBOARD_FILE.tmp" "$LEADERBOARD_FILE"
-}
-
-print_leaderboard() {
-    echo -e "\n${GREEN}Leaderboard:${NC}"
-    while IFS=: read -r name score; do
-        echo -e "  $name: $score wins"
-    done < "$LEADERBOARD_FILE"
-
-
-    echo
-}
+LEADERBOARD="leaderboard.txt"
 print_banner() {
     echo -e "${GREEN} ____             _                 _       _           "
     echo -e "|  _ \\  ___  ___| |__   ___   ___ | |_ ___| |__   __ _ "
