@@ -6,8 +6,8 @@ update_leaderboard() {
         echo "$PLAYER1:0" > "$LEADERBOARD_FILE"
         echo "$PLAYER2:0" >> "$LEADERBOARD_FILE"
     fi
-    local p1_score=$(grep "^$PLAYER1:" "$LEADERBOARD_FILE" | cut -d: -f2)
-    local p2_score=$(grep "^$PLAYER2:" "$LEADERBOARD_FILE" | cut -d: -f2)
+    local p1_score=$(grep "^$PLAYER1:" "$LEADERBOARD_FILE" | grep -v '^#' | cut -d: -f2)
+    local p2_score=$(grep "^$PLAYER2:" "$LEADERBOARD_FILE" | grep -v '^#' | cut -d: -f2)
     p1_score=${p1_score:-0}
     p2_score=${p2_score:-0}
     if [[ "$winner" == "$PLAYER1" ]]; then
