@@ -57,7 +57,6 @@ mkdir -p "$LOG_DIR"
 touch "$LOG_FILE"
 
 LEADERBOARD_FILE="leaderboard.txt"
-touch "$LEADERBOARD_FILE"
 
 
 log_event() {
@@ -171,6 +170,10 @@ main() {
 
     # Update and show leaderboard
     update_leaderboard "$winner"
+    
+    # At the end of your game, after deciding the winner:
+    echo "$winner" > winner.txt
+
     show_leaderboard
 }
 

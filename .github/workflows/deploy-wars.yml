@@ -25,15 +25,29 @@ jobs:
           FORCE_COLOR: "1"
         run: ./deploy_wars.sh --no-prompt
 
-      - name: Commit and push new logs
+      - name: Update Leaderboard
+        run: |
+          if [ -f winner.txt ]; then
+            WINNER=$(cat winner.txt)
+
+            # Initialize leaderboard if missing
+            if [ ! -f leaderboard.json ]; then
+              echo '{"DevOps":0,"Developer":0}' > leaderboard.json
+            fi
+
+            # Update counts
+            if [ "$WINNER" = "DevOps" ]; then
+              jq '.DevOps += 1' leaderboard.json > tmp.$$.json && mv tmp.$$.json leaderboard.json
+            elif [ "$WINNER" = "Developer" ]; then
+              jq '.Developer += 1' leaderboard.json > tmp.$$.json && mv tmp.$$.json leaderboard.json
+            fi
+          fi
+
+      - name: Commit and push logs + leaderboard
         if: always()
         run: |
-          if compgen -G "logs/*.log" > /dev/null; then
-            git config user.name "github-actions[bot]"
-            git config user.email "github-actions[bot]@users.noreply.github.com"
-            git add logs/*.log
-            git commit -m "Add new Deploy Wars battle log [skip ci]" || echo "No changes to commit"
-            git push
-          else
-            echo "No logs found to commit."
-          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add logs/*.log leaderboard.json || true
+          git commit -m "Update Deploy Wars logs & leaderboard [skip ci]" || echo "No changes to commit"
+          git push
