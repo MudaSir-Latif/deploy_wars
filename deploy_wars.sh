@@ -73,16 +73,38 @@ print_hp() {
 }
 
 player_turn() {
+    local attack_name="${attacks[$attack_idx]}"
+local attack_desc=""
+if [[ "$attacker" == "$PLAYER1" ]]; then
+    attack_desc="${DEVOPS_DESCRIPTIONS[$attack_idx]}"
+else
+    attack_desc="${DEVELOPER_DESCRIPTIONS[$attack_idx]}"
+fi
     local attacker=$1
     local defender=$2
     local -n attacks=$3
     local -n hp_defender=$4
 
-    local attack_idx=$(rand 0 $((${#attacks[@]} - 1)))
+    local attack_idx
+    if [[ "$attacker" == "$USER_SIDE" ]]; then
+        echo "Choose your attack:"
+        for i in "${!attacks[@]}"; do
+            echo "$i) ${attacks[$i]}"
+        done
+        read -p "Enter attack number: " attack_idx
+        # Validate input
+        if ! [[ "$attack_idx" =~ ^[0-9]+$ ]] || (( attack_idx < 0 || attack_idx >= ${#attacks[@]} )); then
+            echo "Invalid choice, choosing random attack"
+            attack_idx=$(( RANDOM % ${#attacks[@]} ))
+        fi
+    else
+        attack_idx=$(( RANDOM % ${#attacks[@]} ))
+    fi
+
     local attack_name="${attacks[$attack_idx]}"
-    local crit_roll=$(rand 1 10)
-    local miss_roll=$(rand 1 10)
-    local damage=$(rand 10 25)
+    local crit_roll=$(( RANDOM % 10 + 1 ))
+    local miss_roll=$(( RANDOM % 10 + 1 ))
+    local damage=$(( RANDOM % 16 + 10 ))
     local msg=""
     local anim=""
     if (( miss_roll == 1 )); then
@@ -97,7 +119,7 @@ player_turn() {
         anim="\U0001F5E1" # 🗡️
     fi
 
-    hp_defender=$((hp_defender - damage))
+    hp_defender=$(( hp_defender - damage ))
     if (( hp_defender < 0 )); then hp_defender=0; fi
 
     echo -e "$attacker uses $attack_name! $anim $msg It deals $damage damage!"
@@ -139,6 +161,7 @@ show_leaderboard() {
 # -----------------------
 
 
+
 main() {
     # Check for argument (non-interactive), else prompt (interactive)
     print_banner
@@ -178,4 +201,14 @@ main() {
     show_leaderboard
 }
 
-main "$1"
+echo -e "${GREEN}Welcome to Deploy Wars!${NC}"
+echo "1. Start Battle"
+echo "2. Exit"
+read -p "Choose an option [1-2]: " choice
+
+if [[ "$choice" == "1" ]]; then
+    main "$1"
+else
+    echo "Goodbye!"
+    exit 0
+fi
