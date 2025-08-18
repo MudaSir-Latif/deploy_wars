@@ -73,26 +73,18 @@ print_hp() {
 }
 
 player_turn() {
-    local attack_name="${attacks[$attack_idx]}"
-local attack_desc=""
-if [[ "$attacker" == "$PLAYER1" ]]; then
-    attack_desc="${DEVOPS_DESCRIPTIONS[$attack_idx]}"
-else
-    attack_desc="${DEVELOPER_DESCRIPTIONS[$attack_idx]}"
-fi
     local attacker=$1
     local defender=$2
     local -n attacks=$3
     local -n hp_defender=$4
 
     local attack_idx
-    if [[ "$attacker" == "$USER_SIDE" ]]; then
+    if [[ "$attacker" == "$USER_SIDE" && "$NO_PROMPT" != true ]]; then
         echo "Choose your attack:"
         for i in "${!attacks[@]}"; do
             echo "$i) ${attacks[$i]}"
         done
         read -p "Enter attack number: " attack_idx
-        # Validate input
         if ! [[ "$attack_idx" =~ ^[0-9]+$ ]] || (( attack_idx < 0 || attack_idx >= ${#attacks[@]} )); then
             echo "Invalid choice, choosing random attack"
             attack_idx=$(( RANDOM % ${#attacks[@]} ))
@@ -102,21 +94,23 @@ fi
     fi
 
     local attack_name="${attacks[$attack_idx]}"
+
     local crit_roll=$(( RANDOM % 10 + 1 ))
     local miss_roll=$(( RANDOM % 10 + 1 ))
     local damage=$(( RANDOM % 16 + 10 ))
     local msg=""
     local anim=""
+
     if (( miss_roll == 1 )); then
         damage=0
         msg="${RED}Missed!${NC}"
-        anim="\U0001F6AB" # 🚫
+        anim="🚫"
     elif (( crit_roll == 10 )); then
         damage=$((damage * 2))
         msg="${GREEN}Critical Hit!${NC}"
-        anim="\U0001F4A5" # 💥
+        anim="💥"
     else
-        anim="\U0001F5E1" # 🗡️
+        anim="🗡️"
     fi
 
     hp_defender=$(( hp_defender - damage ))
@@ -126,6 +120,7 @@ fi
     print_hp
     log_event "$attacker used $attack_name for $damage damage. $PLAYER1 HP: $HP1, $PLAYER2 HP: $HP2"
 }
+
 
 # ---------------------------
 # Leaderboard Functions
