@@ -10,8 +10,7 @@ A complete end-to-end **DevOps demo project** that showcases automation, scripti
 - Alternating turns until someone’s **HP reaches 0**.
 - **Color-coded** terminal output (falls back gracefully when colors unsupported).
 - **Battle logs** saved with timestamps to `logs/` (unique filename per run).
-- Robust **error handling** + comments.
-- **GitHub Actions** workflow that runs the game on every push to `main` and **commits generated logs back** to the repo.
+- **GitHub Actions** workflow that runs the game on every push to `main` and also on cronjobs and **commits generated logs back** to the repo.
 
 ## Quick Start
 
@@ -19,10 +18,7 @@ A complete end-to-end **DevOps demo project** that showcases automation, scripti
 git clone <your-fork-url>.git
 cd deploy-wars
 chmod +x deploy_wars.sh
-./deploy_wars.sh         # interactive
-# or
-./deploy_wars.sh --no-prompt  # non-interactive
-```
+./deploy_wars.sh 
 
 A log file will be created in `logs/` like `battle_YYYYMMDD_HHMMSS_PID.log`.
 
@@ -30,8 +26,8 @@ A log file will be created in `logs/` like `battle_YYYYMMDD_HHMMSS_PID.log`.
 
 This repository includes `.github/workflows/deploy-wars.yml` which:
 
-1. Triggers on pushes to `main`.
-2. Runs the game non-interactively.
+1. Triggers on pushes on to `main` and cronjob .
+2. Runs the game .
 3. Commits **new** log files back to the repo.
 
 ### Important
@@ -49,15 +45,11 @@ deploy-wars/
 ├── .github/
 │   └── workflows/
 │       └── deploy-wars.yml        # CI to run the game and commit logs
+├── leaderboard.txt
 ├── .gitignore
 └── README.md
 ```
 
-## Troubleshooting
-
-- **shuf: command not found** (macOS): The script auto-falls back to `jot` (available on macOS). If neither exists, it uses `$RANDOM` as a last resort.
-- **Workflow cannot push**: Ensure your repo allows `GITHUB_TOKEN` to write. In the repo settings, make sure Actions are enabled and the default workflow permissions include **Read and write** (or keep `permissions: contents: write` in the workflow).
-- **Color output looks odd**: Set `FORCE_COLOR=0` to disable colors or run in a terminal that supports ANSI colors.
 
 ## DevOps Concepts Demonstrated
 
@@ -66,6 +58,3 @@ deploy-wars/
 - **CI/CD**: Workflow that runs on push and persists artifacts (logs) to the repo.
 - **Idempotency**: Safe re-runs; logs are uniquely named; CI avoids infinite loops via `[skip ci]`.
 
-## License
-
-MIT (or your choice)
