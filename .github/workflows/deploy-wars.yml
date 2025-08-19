@@ -3,13 +3,18 @@ name: Deploy Wars Battle Log CI
 on:
   push:
     branches: [ main ]
+  schedule:
+    - cron: '0 * * * *'
 
 permissions:
   contents: write
 
 jobs:
   run-battle:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
     steps:
       - name: Checkout repository
         if: ${{ !contains(github.event.head_commit.message, '[skip ci]') }}
