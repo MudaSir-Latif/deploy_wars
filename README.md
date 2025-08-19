@@ -19,7 +19,7 @@ git clone <your-fork-url>.git
 cd deploy-wars
 chmod +x deploy_wars.sh
 ./deploy_wars.sh 
-
+```
 A log file will be created in `logs/` like `battle_YYYYMMDD_HHMMSS_PID.log`.
 
 ## GitHub Actions CI
